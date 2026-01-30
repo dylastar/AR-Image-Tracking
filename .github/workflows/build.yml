@@ -1,0 +1,39 @@
+name: Build APK
+
+on: [push, workflow_dispatch]
+
+jobs:
+  buildAndroid:
+    name: Build for Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
+      - name: Build Android APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          # 这里就是你图中项目要求的特定版本，GameCI 会自动下载这个版本的镜像
+          unityVersion: 2021.3.0f1
+          androidAppBundle: false # 设置为 false 输出 .apk，设置为 true 输出 .aab
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-Build
+          path: build/Android
